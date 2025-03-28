@@ -6,73 +6,85 @@ import { FcGoogle } from "react-icons/fc";
 
 const Container = styled.div`
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   height: 100vh;
+  background: linear-gradient(to right, #6a11cb, #2575fc);
+`;
+
+const LoginCard = styled.div`
+  background: white;
+  padding: 40px;
+  width: 400px;
+  border-radius: 12px;
+  box-shadow: 0px 5px 20px rgba(0, 0, 0, 0.15);
   text-align: center;
-  background-color: #f4f4f4;
+`;
+
+const Title = styled.h2`
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 10px;
+`;
+
+const Subtitle = styled.p`
+  color: #666;
+  margin-bottom: 20px;
 `;
 
 const Message = styled.p`
-  position: absolute;
-  top: 20px;
-  width: 100%;
-  text-align: center;
-  font-size: 22px;
+  font-size: 18px;
   font-weight: bold;
   color: ${(props) => (props.success ? "green" : "red")};
+  margin-bottom: 15px;
 `;
 
-const Button = styled.button`
+const GoogleButton = styled.button`
   display: flex;
   align-items: center;
+  justify-content: center;
   background: white;
   border: 1px solid #ddd;
   padding: 12px 18px;
-  font-size: 18px;
-  cursor: pointer;
-  border-radius: 5px;
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-  transition: 0.3s;
-  color: #333;
+  width: 100%;
+  font-size: 16px;
   font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.3s;
+  color: #333;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
 
   &:hover {
     background: #f8f9fa;
+    transform: scale(1.03);
   }
 
   svg {
     margin-right: 10px;
-    font-size: 24px;
+    font-size: 22px;
   }
 `;
 
-const GoogleLoginButton = () => {
+const GoogleLoginButton = ({ setMessage, message }) => {
   const navigate = useNavigate();
-  const [message, setMessage] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // ✅ Fix: Use useEffect only once on mount
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem("user");
-    if (isAuthenticated) {
-      navigate("/dashboard"); // ✅ No infinite loop
+    if (isLoggedIn) {
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 1000);
     }
-  }, []); // ✅ Empty dependency array ensures it runs only once
+  }, [isLoggedIn]); 
 
   const handleLogin = async () => {
     try {
       const result = await signInWithGoogle();
       if (result) {
-        // 🔹 Save user info in localStorage
         localStorage.setItem("user", JSON.stringify(result.user));
-
         setMessage("✅ Login successful! Redirecting...");
-        
-        // 🔹 Redirect after delay
-        setTimeout(() => {
-          navigate("/dashboard");
-        }, 1500);
+        setIsLoggedIn(true);
       }
     } catch (error) {
       setMessage("❌ Login failed. Please try again.");
@@ -81,10 +93,14 @@ const GoogleLoginButton = () => {
 
   return (
     <Container>
-      {message && <Message success={message.includes("✅")}>{message}</Message>}
-      <Button onClick={handleLogin}>
-        <FcGoogle /> Sign in with Google
-      </Button>
+      <LoginCard>
+        {message && <Message success={message.includes("✅")}>{message}</Message>}
+        <Title>Welcome to MyApp</Title>
+        <Subtitle>Sign in to continue</Subtitle>
+        <GoogleButton onClick={handleLogin}>
+          <FcGoogle /> Sign in with Google
+        </GoogleButton>
+      </LoginCard>
     </Container>
   );
 };

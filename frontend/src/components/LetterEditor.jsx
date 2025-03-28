@@ -1,30 +1,38 @@
-import { useState, lazy, Suspense } from "react";
-import "react-quill/dist/quill.snow.css";
+import { useState } from "react";
 import styled from "styled-components";
 
-// Dynamically import ReactQuill for Vite
-const ReactQuill = lazy(() => import("react-quill"));
-
 const EditorContainer = styled.div`
-  width: 60%;
-  margin: auto;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   padding: 20px;
-  border-radius: 10px;
-  background-color: #f9f9f9;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f8f9fa;
+  width: 100%;
+  max-width: 600px;
+  margin: auto;
+`;
+
+const TextArea = styled.textarea`
+  width: 100%;
+  height: 200px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+  resize: vertical;
 `;
 
 const SaveButton = styled.button`
-  padding: 10px 20px;
-  font-size: 16px;
   background-color: #007bff;
   color: white;
+  padding: 10px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   transition: 0.3s;
-  
+
   &:hover {
     background-color: #0056b3;
   }
@@ -33,22 +41,23 @@ const SaveButton = styled.button`
 const LetterEditor = ({ onSave }) => {
   const [content, setContent] = useState("");
 
+  const handleChange = (e) => {
+    setContent(e.target.value);
+  };
+
   const handleSave = () => {
-    onSave(content);
+    if (content.trim()) {
+      onSave(content);
+      setContent(""); // Clear after saving
+    } else {
+      alert("Letter cannot be empty!");
+    }
   };
 
   return (
     <EditorContainer>
-      <h2>Write Your Letter</h2>
-      <Suspense fallback={<div>Loading editor...</div>}>
-        <ReactQuill
-          value={content}
-          onChange={setContent}
-          theme="snow"
-          placeholder="Write your letter here..."
-          style={{ height: "300px", marginBottom: "20px" }}
-        />
-      </Suspense>
+      <h3>Write Your Letter</h3>
+      <TextArea value={content} onChange={handleChange} placeholder="Type here..." />
       <SaveButton onClick={handleSave}>Save Letter</SaveButton>
     </EditorContainer>
   );

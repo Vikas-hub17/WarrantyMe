@@ -1,20 +1,41 @@
 import { useEffect, useState } from "react";
 import { logout } from "../firebase/authService";
-import {auth} from "../firebase/firebaseConfig";
+import { auth } from "../firebase/firebaseConfig";
 import { useNavigate } from "react-router-dom";
 import { saveToGoogleDrive, fetchLettersFromDrive } from "../utils/googleDrive";
 import styled from "styled-components";
-import Editor from "../components/LetterEditor";
+import LetterEditor from "../components/LetterEditor";
 
 const DashboardContainer = styled.div`
-  text-align: center;
-  margin-top: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  background: #f4f4f9;
+  padding: 20px;
+  font-family: "Arial", sans-serif;
+`;
+
+const Header = styled.header`
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: #007bff;
+  color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+`;
+
+const Title = styled.h1`
+  margin: 0;
+  font-size: 24px;
 `;
 
 const LogoutButton = styled.button`
   background-color: #dc3545;
   color: white;
-  padding: 10px 20px;
+  padding: 10px 15px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
@@ -25,27 +46,27 @@ const LogoutButton = styled.button`
   }
 `;
 
-const SaveButton = styled.button`
-  background-color: #28a745;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin: 10px;
-  transition: 0.3s;
+const Content = styled.div`
+  width: 100%;
+  max-width: 800px;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+`;
 
-  &:hover {
-    background-color: #218838;
-  }
+const SavedLettersSection = styled.div`
+  margin-top: 20px;
 `;
 
 const SavedLetterContainer = styled.div`
-  border: 1px solid #ccc;
+  border-left: 5px solid #007bff;
   padding: 10px;
-  margin: 10px;
-  background-color: white;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 10px;
+  background-color: #f9f9f9;
+  border-radius: 5px;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
 `;
 
 function Dashboard() {
@@ -57,12 +78,18 @@ function Dashboard() {
     const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        const savedLetters = await fetchLettersFromDrive();
-        setLetters(savedLetters);
+        try {
+          const savedLetters = await fetchLettersFromDrive();
+          setLetters(savedLetters);
+        } catch (error) {
+          console.error("Error fetching letters:", error);
+        }
       } else {
-        navigate("/");
+        console.log("User is logged out, redirecting...");
+        navigate("/"); // Ensure redirection
       }
     });
+
     return () => unsubscribe();
   }, [navigate]);
 
@@ -72,20 +99,39 @@ function Dashboard() {
     alert("Letter saved to Google Drive!");
   };
 
+  const handleLogout = async () => {
+    console.log("Logout button clicked!"); // Debugging
+    try {
+      await logout();
+      console.log("User logged out successfully"); // Debugging
+      navigate("/"); // Redirect to login page
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+  
   return (
     <DashboardContainer>
-      <h1>Dashboard</h1>
-      {user && <h2>Welcome, {user.displayName}!</h2>}
-      <LogoutButton onClick={() => { logout(); navigate("/"); }}>Logout</LogoutButton>
-
-      <Editor onSave={handleSaveLetter} />
-
-      <h3>Saved Letters</h3>
-      {letters.map((letter, index) => (
-        <SavedLetterContainer key={index}>
-          <div dangerouslySetInnerHTML={{ __html: letter }} />
-        </SavedLetterContainer>
-      ))}
+      <Header>
+        <Title>Dashboard</Title>
+        <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
+      </Header>
+      <Content>
+        {user && <h2>Welcome, {user.displayName}!</h2>}
+        <LetterEditor onSave={handleSaveLetter} />
+        <SavedLettersSection>
+          <h3>Saved Letters</h3>
+          {letters.length === 0 ? (
+            <p>No saved letters yet.</p>
+          ) : (
+            letters.map((letter, index) => (
+              <SavedLetterContainer key={index}>
+                <div dangerouslySetInnerHTML={{ __html: letter }} />
+              </SavedLetterContainer>
+            ))
+          )}
+        </SavedLettersSection>
+      </Content>
     </DashboardContainer>
   );
 }

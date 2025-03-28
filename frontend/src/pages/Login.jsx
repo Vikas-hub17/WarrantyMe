@@ -1,53 +1,63 @@
-import React from "react";
-import styled from "styled-components";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import GoogleLoginButton from "../components/GoogleLoginButton";
+import styled from "styled-components";
 
-const LoginContainer = styled.div`
+const Container = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+  background: linear-gradient(to right, #6a11cb, #2575fc);
 `;
 
-const LoginBox = styled.div`
+const LoginCard = styled.div`
   background: white;
   padding: 40px;
-  border-radius: 10px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  width: 400px;
+  border-radius: 12px;
+  box-shadow: 0px 5px 20px rgba(0, 0, 0, 0.15);
   text-align: center;
-  width: 350px;
 `;
 
 const Title = styled.h2`
-  margin-bottom: 20px;
   font-size: 24px;
   color: #333;
+  margin-bottom: 10px;
 `;
 
-const Divider = styled.div`
-  margin: 20px 0;
-  height: 1px;
-  background: #ddd;
+const Subtitle = styled.p`
+  color: #666;
+  margin-bottom: 20px;
 `;
 
-const GoogleButtonWrapper = styled.div`
-  display: flex;
-  justify-content: center;
+const Message = styled.p`
+  font-size: 18px;
+  font-weight: bold;
+  color: ${(props) => (props.success ? "green" : "red")};
+  margin-bottom: 15px;
 `;
 
 const Login = () => {
+  const navigate = useNavigate();
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    const isAuthenticated = localStorage.getItem("user");
+    if (isAuthenticated) {
+      navigate("/dashboard");
+    }
+  }, []);
+
   return (
-    <LoginContainer>
-      <LoginBox>
-        <Title>Welcome to Your App</Title>
-        <p>Sign in to continue</p>
-        <Divider />
-        <GoogleButtonWrapper>
-          <GoogleLoginButton />
-        </GoogleButtonWrapper>
-      </LoginBox>
-    </LoginContainer>
+    <Container>
+      <LoginCard>
+        {message && <Message success={message.includes("✅")}>{message}</Message>}
+        <Title>Welcome to MyApp</Title>
+        <Subtitle>Sign in to continue</Subtitle>
+        <GoogleLoginButton setMessage={setMessage} message={message} />
+      </LoginCard>
+    </Container>
   );
 };
 
