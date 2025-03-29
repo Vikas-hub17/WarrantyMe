@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { logout } from "../firebase/authService";
 import { auth } from "../firebase/firebaseConfig";
 import { useNavigate } from "react-router-dom";
-import { saveToGoogleDrive, fetchLettersFromDrive, deleteLetterFromDrive } from "../utils/googleDrive";
+import { saveToGoogleDrive, fetchLettersFromDrive, deleteLetterFromDrive } from "../utils/googleDrive.js";
 import styled from "styled-components";
 import LetterEditor from "../components/LetterEditor";
 
@@ -68,7 +68,7 @@ const SavedLetterContainer = styled.div`
 `;
 
 const Button = styled.button`
-  background-color: ${(props) => (props.primary ? "#28a745" : "#dc3545")};
+  background-color: ${(props) => (props.$primary ? "#28a745" : "#dc3545")};
   color: white;
   border: none;
   padding: 5px 10px;
@@ -78,7 +78,7 @@ const Button = styled.button`
   margin-left: 10px;
 
   &:hover {
-    background-color: ${(props) => (props.primary ? "#218838" : "#a71d2a")};
+    background-color: ${(props) => (props.$primary ? "#218838" : "#a71d2a")};
   }
 `;
 
@@ -218,7 +218,7 @@ const Dashboard = () => {
           drafts.map((draft, index) => (
             <SavedLetterContainer key={index}>
               <div>{draft}</div>
-              <Button primary onClick={() => handleUploadDraft(index)}>
+              <Button $primary onClick={() => handleUploadDraft(index)}>
                 Upload
               </Button>
               <Button onClick={() => handleDeleteDraft(index)}>Delete</Button>

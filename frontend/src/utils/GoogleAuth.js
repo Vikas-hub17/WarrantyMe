@@ -2,8 +2,8 @@ import { useEffect } from "react";
 import { gapi } from "gapi-script";
 
 const CLIENT_ID = "159182037520-2o2og6o020lflqo8j7mie8f8ml81f2q7.apps.googleusercontent.com";
-const API_KEY = "AIzaSyDQRg2FLntvHmuNSsQxBkXQrGYLuflltkQ";
-const SCOPES = "https://www.googleapis.com/auth/drive.appdata";
+const API_KEY = "AIzaSyBONN9nc3rw0reAq1Nj1ScjlVqwxcycLpo";
+const SCOPES = ["https://www.googleapis.com/auth/drive.appdata", "https://www.googleapis.com/auth/drive.file"];
 
 export const initGoogleAuth = () => {
   gapi.load("client:auth2", () => {

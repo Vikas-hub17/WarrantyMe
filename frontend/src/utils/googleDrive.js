@@ -1,4 +1,5 @@
 import { gapi } from "gapi-script";
+import { saveToMongoDB } from "./mongoService"; // Import MongoDB save function
 
 
 export const getAccessToken = async () => {
@@ -9,63 +10,76 @@ export const getAccessToken = async () => {
   return authInstance.currentUser.get().getAuthResponse().access_token;
 };
 
-export const saveToGoogleDrive = async (content) => {
+export async function saveToGoogleDrive(content) {
   try {
-    const accessToken = await getAccessToken(); // Ensure we have a valid token
+      const scriptUrl = "https://script.google.com/macros/s/AKfycbxDTX4snWLAWGs2LvaYiMzwzcyLgH9Me0ZQxJcsZqoQe0-e4BCgJBcyu1xl-zquHGJcpw/exec"; 
 
-    if (!accessToken) {
-      throw new Error("No access token found. Please sign in again.");
-    }
+      const response = await fetch(scriptUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content }),
+      });
 
-    const metadata = {
-      name: "Letter.txt",
-      mimeType: "text/plain",
-    };
+      const data = await response.json();
+      if (!data.success) {
+          throw new Error(data.error || "Google Drive Save Failed");
+      }
 
-    const form = new FormData();
-    form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
-    form.append("file", new Blob([content], { type: "text/plain" }));
-
-    const response = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
-      method: "POST",
-      headers: new Headers({ Authorization: `Bearer ${accessToken}` }),
-      body: form,
-    });
-
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error.message);
-    
-    return result;
+      console.log("✅ Letter saved:", data);
+      return true;
   } catch (error) {
-    console.error("Google Drive Save Error:", error);
-    throw error;
+      console.error("❌ Google Drive Save Error:", error.message);
+      return false;
   }
-};
+}
 
 export const fetchLettersFromDrive = async () => {
   try {
-    const response = await gapi.client.drive.files.list({
-      q: "mimeType='text/plain'",
-      fields: "files(id, name)",
-    });
+    console.log("ℹ️ Fetching saved letters from Google Drive...");
 
-    const files = response.result.files || [];
-    const letters = await Promise.all(
-      files.map(async (file) => {
-        const fileContent = await gapi.client.drive.files.get({
-          fileId: file.id,
-          alt: "media",
-        });
-        return { id: file.id, name: file.name, content: fileContent.body };
-      })
+    const folderId = "1Bmq6DwMFuI7DTjRAxdenm5LgqRXc-cY5"; // Replace with your Google Drive Folder ID
+    const apiKey = "AIzaSyBONN9nc3rw0reAq1Nj1ScjlVqwxcycLpo"; // Replace with your Google API Key
+
+    if (!folderId || !apiKey) {
+        throw new Error("❌ Missing API Key or Folder ID. Check your configuration.");
+    }
+
+    // Step 1: List all files in the folder
+    const listResponse = await fetch(
+        `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents&key=${apiKey}`
     );
 
+    const listData = await listResponse.json();
+    if (!listResponse.ok) {
+        throw new Error(`Google Drive List Error: ${listData.error?.message || listResponse.statusText}`);
+    }
+
+    const files = listData.files || [];
+    console.log("📂 Retrieved Files:", files);
+
+    if (files.length === 0) {
+        return [];
+    }
+
+    // Step 2: Fetch the content of each file
+    const letters = await Promise.all(
+        files.map(async (file) => {
+            const fileResponse = await fetch(
+                `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&key=${apiKey}`
+            );
+
+            const content = await fileResponse.text();
+            return { id: file.id, name: file.name, content };
+        })
+    );
+
+    console.log("📄 Saved Letters:", letters);
     return letters;
-  } catch (error) {
-    console.error("Error fetching letters from Google Drive:", error);
-    throw error;
-  }
-};
+} catch (error) {
+    console.error("❌ Google Drive Fetch Error:", error.message);
+    return [];
+}
+}
 
 export const deleteLetterFromDrive = async (letterName, accessToken) => {
   console.log("Attempting to delete letter:", letterName);
@@ -115,3 +129,4 @@ export const deleteLetterFromDrive = async (letterName, accessToken) => {
     return false;
   }
 };
+

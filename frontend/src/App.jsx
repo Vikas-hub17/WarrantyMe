@@ -1,23 +1,23 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
-import GoogleLoginButton from "./components/GoogleLoginButton";
+import Login from "./pages/Login";
+import { useEffect, useState } from "react";
 import { initGoogleAuth } from "./utils/GoogleAuth";
-import { useEffect } from "react";
 
 function App() {
-  const user = JSON.parse(localStorage.getItem("user"));
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     initGoogleAuth();
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    setUser(storedUser);
   }, []);
 
   return (
-
       <Routes>
-        <Route path="/" element={!user ? <GoogleLoginButton /> : <Navigate to="/dashboard" />} />
+        <Route path="/" element={<Login />} />
         <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/" />} />
       </Routes>
-
   );
 }
 

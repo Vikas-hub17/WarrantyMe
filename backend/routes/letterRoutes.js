@@ -1,10 +1,15 @@
 import express from "express";
-import { saveLetter, getLetters } from "../controllers/letterController.js";
-import protect from "../middlewares/authMiddleware.js";
+import { saveLetter, getLetters, deleteLetter } from "../controllers/letterController.js";
 
 const router = express.Router();
 
-router.post("/save", protect, saveLetter);
-router.get("/all", protect, getLetters);
+// Save letter to MongoDB (No authentication required)
+router.post("/save", saveLetter);
+
+// Fetch all saved letters (No authentication required)
+router.get("/all", getLetters);
+
+// Delete a letter from MongoDB (No authentication required)
+router.delete("/delete/:id", deleteLetter);
 
 export default router;
