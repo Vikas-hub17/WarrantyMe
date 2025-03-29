@@ -6,43 +6,86 @@ import styled from "styled-components";
 const EditorContainer = styled.div`
   width: 80%;
   margin: 20px auto;
-  background: white;
+  background: #f9f9f9;
   padding: 20px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 5px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+`;
+
+const EditorTitle = styled.h2`
+  text-align: center;
+  font-size: 1.5rem;
+  color: #333;
+  margin-bottom: 15px;
 `;
 
 const SaveButton = styled.button`
-  background-color: #28a745;
+  background-color: ${(props) => (props.disabled ? "#cccccc" : "#28a745")};
   color: white;
-  padding: 10px 20px;
+  padding: 12px 24px;
+  font-size: 1rem;
   border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-top: 10px;
+  border-radius: 6px;
+  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
+  margin-top: 15px;
+  display: block;
+  width: 100%;
   transition: 0.3s;
 
   &:hover {
-    background-color: #218838;
+    background-color: ${(props) => (props.disabled ? "#cccccc" : "#218838")};
   }
+`;
+
+const ErrorText = styled.p`
+  color: red;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-align: center;
+`;
+
+const SuccessMessage = styled.p`
+  color: green;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-align: center;
 `;
 
 const Editor = ({ onSave }) => {
   const [text, setText] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = () => {
-    if (text.trim() !== "") {
-      onSave(text);
-    } else {
-      alert("Letter cannot be empty!");
+  const handleSave = async () => {
+    if (text.trim() === "") {
+      setError("Letter cannot be empty!");
+      setSuccess(""); // Clear previous success message
+      return;
+    }
+
+    setIsSaving(true);
+    setError(""); // Clear any previous errors
+    try {
+      await onSave(text);
+      setSuccess("Letter saved successfully! ✅");
+      setText(""); // Clear editor after save
+    } catch (error) {
+      setError("Failed to save the letter. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
   return (
     <EditorContainer>
-      <h2>Write Your Letter</h2>
+      <EditorTitle>Write Your Letter</EditorTitle>
       <ReactQuill value={text} onChange={setText} theme="snow" />
-      <SaveButton onClick={handleSave}>Save to Google Drive</SaveButton>
+      {error && <ErrorText>{error}</ErrorText>}
+      {success && <SuccessMessage>{success}</SuccessMessage>}
+      <SaveButton onClick={handleSave} disabled={isSaving}>
+        {isSaving ? "Saving..." : "Save to Google Drive"}
+      </SaveButton>
     </EditorContainer>
   );
 };
